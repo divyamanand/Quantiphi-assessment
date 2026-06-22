@@ -23,11 +23,9 @@ function validateBody(body: Record<string, unknown>): string[] {
   if (!nextRenewalDate || isNaN(Date.parse(nextRenewalDate as string))) {
     errors.push("nextRenewalDate must be a valid date (YYYY-MM-DD)");
   } else {
-    const renewal = new Date(nextRenewalDate as string);
-    renewal.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (renewal < today) {
+    const now = new Date();
+    const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    if (Date.parse(nextRenewalDate as string) < todayUTC) {
       errors.push("nextRenewalDate must be today or in the future");
     }
   }

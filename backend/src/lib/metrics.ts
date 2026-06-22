@@ -5,10 +5,11 @@ type Subscription = SubscriptionModel;
 
 const RENEWAL_ALERT_DAYS = 7;
 
-function today(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+// Returns today as a UTC midnight timestamp — avoids local-timezone drift when
+// comparing against YYYY-MM-DD strings, which Date.parse() always treats as UTC.
+function todayUTC(): number {
+  const now = new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 }
 
 export function toMonthlyRate(cost: number, billingCycle: string): number {
@@ -16,13 +17,13 @@ export function toMonthlyRate(cost: number, billingCycle: string): number {
 }
 
 export function daysUntilRenewal(nextRenewalDate: string): number {
-  const renewal = new Date(nextRenewalDate);
-  if (isNaN(renewal.getTime())) {
+  // Date.parse on a bare YYYY-MM-DD string produces UTC midnight — keep both
+  // sides in UTC so the diff is timezone-agnostic.
+  const renewalUTC = Date.parse(nextRenewalDate);
+  if (isNaN(renewalUTC)) {
     throw new AppError(500, "Invalid renewal date in database record", "DATA_INTEGRITY_ERROR");
   }
-  renewal.setHours(0, 0, 0, 0);
-  const diff = renewal.getTime() - today().getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return Math.ceil((renewalUTC - todayUTC()) / (1000 * 60 * 60 * 24));
 }
 
 export interface EnrichedSubscription extends Subscription {
@@ -37,7 +38,8 @@ export function enrichSubscription(sub: Subscription): EnrichedSubscription {
     ...sub,
     monthlyRate: parseFloat(toMonthlyRate(sub.cost, sub.billingCycle).toFixed(2)),
     daysUntilRenewal: days,
-    renewingSoon: days >= 0 && days <= RENEWAL_ALERT_DAYS,
+    // Paused subscriptions never show as renewing soon — the badge would contradict the paused state.
+    renewingSoon: sub.status === "Active" && days >= 0 && days <= RENEWAL_ALERT_DAYS,
   };
 }
 
