@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { getSubscriptions, addSubscription, toggleSubscription } from './api/subscriptions'
+import { getSubscriptions, addSubscription, toggleSubscription, deleteSubscription } from './api/subscriptions'
 import { ApiError } from './lib/errors'
 import type { Subscription, Metrics, SubscriptionPayload } from './types/subscription'
 import MetricsRow from './components/MetricsRow'
@@ -14,6 +14,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   // Applies an API response to local state.
   // GET, POST, and PATCH all return the same ApiResponse shape.
@@ -61,6 +62,24 @@ export default function App() {
       )
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // ── Delete subscription ────────────────────────────────────────────────────
+  async function handleDelete(id: number) {
+    setDeletingId(id)
+    try {
+      const data = await deleteSubscription(id)
+      applyResponse(data)
+      toast.success('Subscription removed.')
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to remove subscription. Try again.',
+      )
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -119,6 +138,8 @@ export default function App() {
             subscriptions={subscriptions}
             onToggle={handleToggle}
             togglingId={togglingId}
+            onDelete={handleDelete}
+            deletingId={deletingId}
           />
         )}
       </main>

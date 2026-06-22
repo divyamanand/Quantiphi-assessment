@@ -1,4 +1,5 @@
 import type { SubscriptionModel } from "../../generated/prisma/models.js";
+import type { BillingCycle } from "../../generated/prisma/enums.js";
 import { AppError } from "./errors.js";
 
 type Subscription = SubscriptionModel;
@@ -12,7 +13,7 @@ function todayUTC(): number {
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 }
 
-export function toMonthlyRate(cost: number, billingCycle: string): number {
+export function toMonthlyRate(cost: number, billingCycle: BillingCycle): number {
   return billingCycle === "Yearly" ? cost / 12 : cost;
 }
 

@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums.ts"
-import type * as Prisma from "../internal/prismaNamespace.ts"
+import type * as $Enums from "../enums.js"
+import type * as Prisma from "../internal/prismaNamespace.js"
 
 /**
  * Model Subscription
@@ -40,9 +40,9 @@ export type SubscriptionMinAggregateOutputType = {
   id: number | null
   serviceName: string | null
   cost: number | null
-  billingCycle: string | null
+  billingCycle: $Enums.BillingCycle | null
   nextRenewalDate: string | null
-  status: string | null
+  status: $Enums.SubscriptionStatus | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -51,9 +51,9 @@ export type SubscriptionMaxAggregateOutputType = {
   id: number | null
   serviceName: string | null
   cost: number | null
-  billingCycle: string | null
+  billingCycle: $Enums.BillingCycle | null
   nextRenewalDate: string | null
-  status: string | null
+  status: $Enums.SubscriptionStatus | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -205,9 +205,9 @@ export type SubscriptionGroupByOutputType = {
   id: number
   serviceName: string
   cost: number
-  billingCycle: string
+  billingCycle: $Enums.BillingCycle
   nextRenewalDate: string
-  status: string
+  status: $Enums.SubscriptionStatus
   createdAt: Date
   updatedAt: Date
   _count: SubscriptionCountAggregateOutputType | null
@@ -239,9 +239,9 @@ export type SubscriptionWhereInput = {
   id?: Prisma.IntFilter<"Subscription"> | number
   serviceName?: Prisma.StringFilter<"Subscription"> | string
   cost?: Prisma.FloatFilter<"Subscription"> | number
-  billingCycle?: Prisma.StringFilter<"Subscription"> | string
+  billingCycle?: Prisma.EnumBillingCycleFilter<"Subscription"> | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringFilter<"Subscription"> | string
-  status?: Prisma.StringFilter<"Subscription"> | string
+  status?: Prisma.EnumSubscriptionStatusFilter<"Subscription"> | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeFilter<"Subscription"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Subscription"> | Date | string
 }
@@ -264,9 +264,9 @@ export type SubscriptionWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.SubscriptionWhereInput | Prisma.SubscriptionWhereInput[]
   serviceName?: Prisma.StringFilter<"Subscription"> | string
   cost?: Prisma.FloatFilter<"Subscription"> | number
-  billingCycle?: Prisma.StringFilter<"Subscription"> | string
+  billingCycle?: Prisma.EnumBillingCycleFilter<"Subscription"> | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringFilter<"Subscription"> | string
-  status?: Prisma.StringFilter<"Subscription"> | string
+  status?: Prisma.EnumSubscriptionStatusFilter<"Subscription"> | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeFilter<"Subscription"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Subscription"> | Date | string
 }, "id">
@@ -294,9 +294,9 @@ export type SubscriptionScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Subscription"> | number
   serviceName?: Prisma.StringWithAggregatesFilter<"Subscription"> | string
   cost?: Prisma.FloatWithAggregatesFilter<"Subscription"> | number
-  billingCycle?: Prisma.StringWithAggregatesFilter<"Subscription"> | string
+  billingCycle?: Prisma.EnumBillingCycleWithAggregatesFilter<"Subscription"> | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringWithAggregatesFilter<"Subscription"> | string
-  status?: Prisma.StringWithAggregatesFilter<"Subscription"> | string
+  status?: Prisma.EnumSubscriptionStatusWithAggregatesFilter<"Subscription"> | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Subscription"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Subscription"> | Date | string
 }
@@ -304,9 +304,9 @@ export type SubscriptionScalarWhereWithAggregatesInput = {
 export type SubscriptionCreateInput = {
   serviceName: string
   cost: number
-  billingCycle: string
+  billingCycle: $Enums.BillingCycle
   nextRenewalDate: string
-  status?: string
+  status?: $Enums.SubscriptionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -315,9 +315,9 @@ export type SubscriptionUncheckedCreateInput = {
   id?: number
   serviceName: string
   cost: number
-  billingCycle: string
+  billingCycle: $Enums.BillingCycle
   nextRenewalDate: string
-  status?: string
+  status?: $Enums.SubscriptionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -325,9 +325,9 @@ export type SubscriptionUncheckedCreateInput = {
 export type SubscriptionUpdateInput = {
   serviceName?: Prisma.StringFieldUpdateOperationsInput | string
   cost?: Prisma.FloatFieldUpdateOperationsInput | number
-  billingCycle?: Prisma.StringFieldUpdateOperationsInput | string
+  billingCycle?: Prisma.EnumBillingCycleFieldUpdateOperationsInput | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -336,9 +336,9 @@ export type SubscriptionUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   serviceName?: Prisma.StringFieldUpdateOperationsInput | string
   cost?: Prisma.FloatFieldUpdateOperationsInput | number
-  billingCycle?: Prisma.StringFieldUpdateOperationsInput | string
+  billingCycle?: Prisma.EnumBillingCycleFieldUpdateOperationsInput | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -347,9 +347,9 @@ export type SubscriptionCreateManyInput = {
   id?: number
   serviceName: string
   cost: number
-  billingCycle: string
+  billingCycle: $Enums.BillingCycle
   nextRenewalDate: string
-  status?: string
+  status?: $Enums.SubscriptionStatus
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -357,9 +357,9 @@ export type SubscriptionCreateManyInput = {
 export type SubscriptionUpdateManyMutationInput = {
   serviceName?: Prisma.StringFieldUpdateOperationsInput | string
   cost?: Prisma.FloatFieldUpdateOperationsInput | number
-  billingCycle?: Prisma.StringFieldUpdateOperationsInput | string
+  billingCycle?: Prisma.EnumBillingCycleFieldUpdateOperationsInput | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -368,9 +368,9 @@ export type SubscriptionUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   serviceName?: Prisma.StringFieldUpdateOperationsInput | string
   cost?: Prisma.FloatFieldUpdateOperationsInput | number
-  billingCycle?: Prisma.StringFieldUpdateOperationsInput | string
+  billingCycle?: Prisma.EnumBillingCycleFieldUpdateOperationsInput | $Enums.BillingCycle
   nextRenewalDate?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -428,6 +428,14 @@ export type FloatFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type EnumBillingCycleFieldUpdateOperationsInput = {
+  set?: $Enums.BillingCycle
+}
+
+export type EnumSubscriptionStatusFieldUpdateOperationsInput = {
+  set?: $Enums.SubscriptionStatus
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -497,9 +505,9 @@ export type $SubscriptionPayload<ExtArgs extends runtime.Types.Extensions.Intern
     id: number
     serviceName: string
     cost: number
-    billingCycle: string
+    billingCycle: $Enums.BillingCycle
     nextRenewalDate: string
-    status: string
+    status: $Enums.SubscriptionStatus
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["subscription"]>
@@ -928,9 +936,9 @@ export interface SubscriptionFieldRefs {
   readonly id: Prisma.FieldRef<"Subscription", 'Int'>
   readonly serviceName: Prisma.FieldRef<"Subscription", 'String'>
   readonly cost: Prisma.FieldRef<"Subscription", 'Float'>
-  readonly billingCycle: Prisma.FieldRef<"Subscription", 'String'>
+  readonly billingCycle: Prisma.FieldRef<"Subscription", 'BillingCycle'>
   readonly nextRenewalDate: Prisma.FieldRef<"Subscription", 'String'>
-  readonly status: Prisma.FieldRef<"Subscription", 'String'>
+  readonly status: Prisma.FieldRef<"Subscription", 'SubscriptionStatus'>
   readonly createdAt: Prisma.FieldRef<"Subscription", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Subscription", 'DateTime'>
 }

@@ -1,6 +1,7 @@
 import type { Subscription } from '../types/subscription'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -15,6 +16,8 @@ interface Props {
   subscriptions: Subscription[]
   onToggle: (id: number) => void
   togglingId: number | null
+  onDelete: (id: number) => void
+  deletingId: number | null
 }
 
 function fmtDate(dateStr: string): string {
@@ -53,7 +56,7 @@ function EmptyState() {
   )
 }
 
-export default function SubscriptionGrid({ subscriptions, onToggle, togglingId }: Props) {
+export default function SubscriptionGrid({ subscriptions, onToggle, togglingId, onDelete, deletingId }: Props) {
   if (subscriptions.length === 0) {
     return (
       <Card className="shadow-sm overflow-hidden">
@@ -67,7 +70,7 @@ export default function SubscriptionGrid({ subscriptions, onToggle, togglingId }
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50 hover:bg-slate-50">
-            {['Service', 'Cost / mo', 'Billing', 'Next renewal', 'Days left', 'Status'].map((h) => (
+            {['Service', 'Cost / mo', 'Billing', 'Next renewal', 'Days left', 'Status', ''].map((h) => (
               <TableHead
                 key={h}
                 className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground"
@@ -137,6 +140,20 @@ export default function SubscriptionGrid({ subscriptions, onToggle, togglingId }
                     onToggle={() => onToggle(sub.id)}
                     disabled={isToggling}
                   />
+                </TableCell>
+
+                {/* Delete — fires DELETE /api/subscriptions/:id */}
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(sub.id)}
+                    disabled={deletingId === sub.id}
+                    className="text-slate-400 hover:text-destructive hover:bg-red-50 h-7 w-7 p-0"
+                    aria-label={`Remove ${sub.serviceName}`}
+                  >
+                    {deletingId === sub.id ? '…' : '×'}
+                  </Button>
                 </TableCell>
               </TableRow>
             )

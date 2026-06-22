@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import prisma from "../lib/prisma.js";
 import { enrichSubscription, computeMetrics } from "../lib/metrics.js";
 import { notFound, badRequest, prismaError } from "../lib/errors.js";
+import { BillingCycle, SubscriptionStatus } from "../../generated/prisma/enums.js";
 
 const router = Router();
 
@@ -46,7 +47,7 @@ router.get("/metrics", async (_req: Request, res: Response, next: NextFunction) 
 // GET /subscriptions
 router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const subs = await prisma.subscription.findMany({ orderBy: { createdAt: "desc" } });
+    const subs = await prisma.subscription.findMany({ orderBy: { nextRenewalDate: "asc" } });
     res.json(subs.map(enrichSubscription));
   } catch (err) {
     next(prismaError(err));
@@ -73,7 +74,7 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
       data: {
         serviceName: serviceName.trim(),
         cost: Number(cost),
-        billingCycle,
+        billingCycle: billingCycle as BillingCycle,
         nextRenewalDate,
         status: "Active",
       },
@@ -97,7 +98,10 @@ router.patch("/:id/toggle", async (req: Request, res: Response, next: NextFuncti
       return next(notFound());
     }
 
-    const newStatus = existing.status === "Active" ? "Paused" : "Active";
+    const newStatus: SubscriptionStatus =
+      existing.status === SubscriptionStatus.Active
+        ? SubscriptionStatus.Paused
+        : SubscriptionStatus.Active;
     const updated = await prisma.subscription.update({
       where: { id },
       data: { status: newStatus },
