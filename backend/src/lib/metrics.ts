@@ -1,4 +1,7 @@
-import type { Subscription } from "../../generated/prisma/models.js";
+import type { SubscriptionModel } from "../../generated/prisma/models.js";
+import { AppError } from "./errors.js";
+
+type Subscription = SubscriptionModel;
 
 const RENEWAL_ALERT_DAYS = 7;
 
@@ -14,6 +17,9 @@ export function toMonthlyRate(cost: number, billingCycle: string): number {
 
 export function daysUntilRenewal(nextRenewalDate: string): number {
   const renewal = new Date(nextRenewalDate);
+  if (isNaN(renewal.getTime())) {
+    throw new AppError(500, "Invalid renewal date in database record", "DATA_INTEGRITY_ERROR");
+  }
   renewal.setHours(0, 0, 0, 0);
   const diff = renewal.getTime() - today().getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));

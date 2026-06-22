@@ -1,4 +1,5 @@
 import type { Metrics } from '../types/subscription'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Props {
   metrics: Metrics | null
@@ -6,46 +7,44 @@ interface Props {
 }
 
 // Renders the two top-level metric cards.
-// All values come directly from the API — no computation here.
+// Field names match backend's Metrics type: totalMonthlyBurn, upcomingRenewalsCount.
 export default function MetricsRow({ metrics, loading }: Props) {
-  const burnRate = metrics?.monthly_burn_rate ?? 0
-  const alertCount = metrics?.upcoming_renewals_count ?? 0
+  const burnRate = metrics?.totalMonthlyBurn ?? 0
+  const alertCount = metrics?.upcomingRenewalsCount ?? 0
 
   return (
     <div className="grid grid-cols-2 gap-5 mb-6">
-      {/* ── Monthly Burn Rate ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-7 relative overflow-hidden shadow-sm">
+      {/* ── Total Monthly Burn Rate ── */}
+      <Card className="relative overflow-hidden shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 to-transparent" />
+        <CardContent className="p-7">
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground mb-3">
+            Total Monthly Burn Rate
+          </p>
+          <p className="font-mono text-5xl font-bold text-foreground tracking-tight leading-none">
+            {loading ? '—' : `$${burnRate.toFixed(2)}`}
+          </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Active subscriptions only
+          </p>
+        </CardContent>
+      </Card>
 
-        <p className="text-[11px] font-semibold tracking-widest uppercase text-slate-400 mb-3">
-          Monthly Burn Rate
-        </p>
-
-        <p className="font-mono text-5xl font-bold text-slate-800 tracking-tight leading-none">
-          {loading ? '—' : `$${burnRate.toFixed(2)}`}
-        </p>
-
-        <p className="mt-3 text-xs text-slate-400">
-          Active subscriptions only
-        </p>
-      </div>
-
-      {/* ── Upcoming Renewals ── */}
-      <div className="bg-amber-50 rounded-2xl border border-amber-200 p-7 relative overflow-hidden shadow-sm">
+      {/* ── Upcoming Renewals Alert Count ── */}
+      <Card className="relative overflow-hidden shadow-sm bg-amber-50 border-amber-200">
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-transparent" />
-
-        <p className="text-[11px] font-semibold tracking-widest uppercase text-amber-500 mb-3">
-          Renewing Soon
-        </p>
-
-        <p className="font-mono text-5xl font-bold text-amber-600 tracking-tight leading-none">
-          {loading ? '—' : alertCount}
-        </p>
-
-        <p className="mt-3 text-xs text-amber-500">
-          Active subscriptions within 7 days
-        </p>
-      </div>
+        <CardContent className="p-7">
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-amber-500 mb-3">
+            Upcoming Renewals Alert Count
+          </p>
+          <p className="font-mono text-5xl font-bold text-amber-600 tracking-tight leading-none">
+            {loading ? '—' : alertCount}
+          </p>
+          <p className="mt-3 text-xs text-amber-500">
+            Active subscriptions within 7 days
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,6 +1,7 @@
-import { Router, type Request, type Response } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import prisma from "../lib/prisma.js";
 import { enrichSubscription, computeMetrics } from "../lib/metrics.js";
+import { notFound, badRequest, prismaError } from "../lib/errors.js";
 
 const router = Router();
 
@@ -21,36 +22,44 @@ function validateBody(body: Record<string, unknown>): string[] {
   }
   if (!nextRenewalDate || isNaN(Date.parse(nextRenewalDate as string))) {
     errors.push("nextRenewalDate must be a valid date (YYYY-MM-DD)");
+  } else {
+    const renewal = new Date(nextRenewalDate as string);
+    renewal.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (renewal < today) {
+      errors.push("nextRenewalDate must be today or in the future");
+    }
   }
 
   return errors;
 }
 
 // GET /subscriptions/metrics — must be before /:id routes
-router.get("/metrics", async (_req: Request, res: Response) => {
+router.get("/metrics", async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const subs = await prisma.subscription.findMany();
     res.json(computeMetrics(subs));
-  } catch {
-    res.status(500).json({ error: "Failed to compute metrics" });
+  } catch (err) {
+    next(prismaError(err));
   }
 });
 
 // GET /subscriptions
-router.get("/", async (_req: Request, res: Response) => {
+router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const subs = await prisma.subscription.findMany({ orderBy: { createdAt: "desc" } });
     res.json(subs.map(enrichSubscription));
-  } catch {
-    res.status(500).json({ error: "Failed to fetch subscriptions" });
+  } catch (err) {
+    next(prismaError(err));
   }
 });
 
 // POST /subscriptions
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response, next: NextFunction) => {
   const errors = validateBody(req.body as Record<string, unknown>);
   if (errors.length) {
-    res.status(400).json({ errors });
+    res.status(400).json({ errors, code: "VALIDATION_ERROR" });
     return;
   }
 
@@ -72,24 +81,22 @@ router.post("/", async (req: Request, res: Response) => {
       },
     });
     res.status(201).json(enrichSubscription(sub));
-  } catch {
-    res.status(500).json({ error: "Failed to create subscription" });
+  } catch (err) {
+    next(prismaError(err));
   }
 });
 
 // PATCH /subscriptions/:id/toggle
-router.patch("/:id/toggle", async (req: Request, res: Response) => {
+router.patch("/:id/toggle", async (req: Request, res: Response, next: NextFunction) => {
   const id = parseInt(req.params["id"] as string, 10);
   if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
+    return next(badRequest("Invalid id"));
   }
 
   try {
     const existing = await prisma.subscription.findUnique({ where: { id } });
     if (!existing) {
-      res.status(404).json({ error: "Subscription not found" });
-      return;
+      return next(notFound());
     }
 
     const newStatus = existing.status === "Active" ? "Paused" : "Active";
@@ -98,30 +105,28 @@ router.patch("/:id/toggle", async (req: Request, res: Response) => {
       data: { status: newStatus },
     });
     res.json(enrichSubscription(updated));
-  } catch {
-    res.status(500).json({ error: "Failed to toggle subscription" });
+  } catch (err) {
+    next(prismaError(err));
   }
 });
 
 // DELETE /subscriptions/:id
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response, next: NextFunction) => {
   const id = parseInt(req.params["id"] as string, 10);
   if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
+    return next(badRequest("Invalid id"));
   }
 
   try {
     const existing = await prisma.subscription.findUnique({ where: { id } });
     if (!existing) {
-      res.status(404).json({ error: "Subscription not found" });
-      return;
+      return next(notFound());
     }
 
     await prisma.subscription.delete({ where: { id } });
     res.status(204).send();
-  } catch {
-    res.status(500).json({ error: "Failed to delete subscription" });
+  } catch (err) {
+    next(prismaError(err));
   }
 });
 

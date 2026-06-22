@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
 import { getSubscriptions, addSubscription, toggleSubscription } from './api/subscriptions'
+import { ApiError } from './lib/errors'
 import type { Subscription, Metrics, SubscriptionPayload } from './types/subscription'
 import MetricsRow from './components/MetricsRow'
 import EntryForm from './components/EntryForm'
 import SubscriptionGrid from './components/SubscriptionGrid'
+import { Toaster } from './components/ui/sonner'
 
 export default function App() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
@@ -11,7 +14,6 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
-  const [error, setError] = useState('')
 
   // Applies an API response to local state.
   // GET, POST, and PATCH all return the same ApiResponse shape.
@@ -23,12 +25,15 @@ export default function App() {
   // ── Initial load ───────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     setLoading(true)
-    setError('')
     try {
       const data = await getSubscriptions()
       applyResponse(data)
-    } catch {
-      setError('Could not load subscriptions. Please refresh.')
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Could not load subscriptions. Please refresh the page.',
+      )
     } finally {
       setLoading(false)
     }
@@ -41,13 +46,19 @@ export default function App() {
   // ── Add subscription ───────────────────────────────────────────────────────
   async function handleAdd(payload: SubscriptionPayload) {
     setSubmitting(true)
-    setError('')
     try {
       // Raw form values — backend normalises cost and computes monthly rate.
       const data = await addSubscription(payload)
       applyResponse(data)
-    } catch {
-      setError('Failed to add subscription. Please try again.')
+      toast.success('Subscription added.')
+    } catch (err) {
+      // Surface backend validation messages for 4xx (e.g. "serviceName is required")
+      // so the user knows exactly what to fix.
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to add subscription. Please try again.',
+      )
     } finally {
       setSubmitting(false)
     }
@@ -56,14 +67,17 @@ export default function App() {
   // ── Toggle active / paused ─────────────────────────────────────────────────
   async function handleToggle(id: number) {
     setTogglingId(id)
-    setError('')
     try {
       // Backend toggles status and returns full updated list + recalculated metrics.
       // Burn rate reflects the change immediately — paused costs excluded server-side.
       const data = await toggleSubscription(id)
       applyResponse(data)
-    } catch {
-      setError('Failed to update status. Please try again.')
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to update subscription status. Try again.',
+      )
     } finally {
       setTogglingId(null)
     }
@@ -71,6 +85,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      {/* Toaster renders toast notifications above all other content */}
+      <Toaster richColors position="top-right" />
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -86,12 +103,6 @@ export default function App() {
 
       {/* Main content */}
       <main className="max-w-5xl mx-auto px-6 py-8">
-        {error && (
-          <div className="mb-5 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
-            {error}
-          </div>
-        )}
-
         {/* Metric cards — values are whatever the API returned */}
         <MetricsRow metrics={metrics} loading={loading} />
 

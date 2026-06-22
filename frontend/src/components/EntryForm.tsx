@@ -1,11 +1,22 @@
 import { useState } from 'react'
 import type { SubscriptionPayload, BillingCycle } from '../types/subscription'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import DatePicker from './DatePicker'
 
 interface FormState {
-  name: string
+  serviceName: string
   cost: string
-  billing_cycle: BillingCycle
-  next_renewal_date: string
+  billingCycle: BillingCycle
+  nextRenewalDate: string
 }
 
 interface Props {
@@ -14,14 +25,15 @@ interface Props {
 }
 
 const EMPTY: FormState = {
-  name: '',
+  serviceName: '',
   cost: '',
-  billing_cycle: 'monthly',
-  next_renewal_date: '',
+  billingCycle: 'Monthly',
+  nextRenewalDate: '',
 }
 
-// Collects user input and fires onSubmit(payload) — no validation logic,
-// no cost normalisation. Raw form values go straight to the backend.
+// Collects user input and fires onSubmit(payload).
+// Field names match backend's validateBody(): serviceName, cost, billingCycle, nextRenewalDate.
+// No cost normalisation — backend handles that.
 export default function EntryForm({ onSubmit, submitting }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY)
   const [error, setError] = useState('')
@@ -35,17 +47,18 @@ export default function EntryForm({ onSubmit, submitting }: Props) {
     e.preventDefault()
 
     // Basic presence checks — backend performs full validation.
-    if (!form.name.trim()) return setError('Service name is required.')
+    if (!form.serviceName.trim()) return setError('Service name is required.')
     const cost = Number(form.cost)
     if (!form.cost || isNaN(cost) || cost <= 0) return setError('Enter a valid cost greater than 0.')
-    if (!form.next_renewal_date) return setError('Pick a renewal date.')
+    if (!form.nextRenewalDate) return setError('Pick a renewal date.')
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    if (new Date(form.nextRenewalDate + 'T00:00:00') < today) return setError('Renewal date must be today or in the future.')
 
-    // Send raw values — backend normalises cost and computes monthly rate.
     onSubmit({
-      name: form.name.trim(),
+      serviceName: form.serviceName.trim(),
       cost,
-      billing_cycle: form.billing_cycle,
-      next_renewal_date: form.next_renewal_date,
+      billingCycle: form.billingCycle,
+      nextRenewalDate: form.nextRenewalDate,
     })
 
     setForm(EMPTY)
@@ -64,74 +77,75 @@ export default function EntryForm({ onSubmit, submitting }: Props) {
       <div className="flex gap-3 items-end flex-wrap">
         {/* Service name */}
         <div className="flex flex-col gap-1.5 flex-[2] min-w-[160px]">
-          <label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+          <Label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
             Service name
-          </label>
-          <input
+          </Label>
+          <Input
             type="text"
             placeholder="e.g. Netflix"
-            value={form.name}
-            onChange={(e) => set('name', e.target.value)}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-300 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
+            value={form.serviceName}
+            onChange={(e) => set('serviceName', e.target.value)}
           />
         </div>
 
-        {/* Cost */}
+        {/* Cost — currency number field with visible $ prefix */}
         <div className="flex flex-col gap-1.5 flex-1 min-w-[110px]">
-          <label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
-            Cost ($)
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            value={form.cost}
-            onChange={(e) => set('cost', e.target.value)}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder-slate-300 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition font-mono"
-          />
+          <Label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+            Cost
+          </Label>
+          <div className="flex items-center border border-input rounded-md focus-within:ring-2 focus-within:ring-ring overflow-hidden">
+            <span className="px-2.5 text-sm font-mono text-muted-foreground bg-muted border-r border-input h-full flex items-center select-none py-2">
+              $
+            </span>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={form.cost}
+              onChange={(e) => set('cost', e.target.value)}
+              className="border-0 rounded-none shadow-none focus-visible:ring-0 font-mono"
+            />
+          </div>
         </div>
 
-        {/* Billing cycle */}
+        {/* Billing cycle — values must match backend enum: 'Monthly' | 'Yearly' */}
         <div className="flex flex-col gap-1.5 min-w-[130px]">
-          <label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+          <Label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
             Billing cycle
-          </label>
-          <select
-            value={form.billing_cycle}
-            onChange={(e) => set('billing_cycle', e.target.value as BillingCycle)}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition bg-white cursor-pointer"
+          </Label>
+          <Select
+            value={form.billingCycle}
+            onValueChange={(v) => set('billingCycle', v as BillingCycle)}
           >
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-          </select>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Monthly">Monthly</SelectItem>
+              <SelectItem value="Yearly">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Renewal date picker */}
+        {/* Renewal date */}
         <div className="flex flex-col gap-1.5 min-w-[160px]">
-          <label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+          <Label className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
             Next renewal date
-          </label>
-          <input
-            type="date"
-            value={form.next_renewal_date}
-            onChange={(e) => set('next_renewal_date', e.target.value)}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
+          </Label>
+          <DatePicker
+            value={form.nextRenewalDate}
+            onChange={(v) => set('nextRenewalDate', v)}
           />
         </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-indigo-500 hover:bg-indigo-600 disabled:opacity-60 text-white font-semibold text-sm px-5 py-2 rounded-lg transition cursor-pointer disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={submitting}>
           {submitting ? 'Adding…' : 'Add subscription'}
-        </button>
+        </Button>
       </div>
 
       {error && (
-        <p className="mt-3 text-xs text-red-500">{error}</p>
+        <p className="mt-3 text-xs text-destructive">{error}</p>
       )}
     </form>
   )

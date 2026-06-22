@@ -1,39 +1,46 @@
-// ─── Shared types — consumed by both the API client and all components ─────────
+// ─── Types mirroring the backend's exact field names ──────────────────────────
+// Source of truth: backend/src/lib/metrics.ts (EnrichedSubscription, Metrics)
+//                  backend/src/routes/subscriptions.ts (request body shape)
 
-export type BillingCycle = 'monthly' | 'yearly'
-export type SubscriptionStatus = 'active' | 'paused'
+export type BillingCycle = 'Monthly' | 'Yearly'   // backend uses title-case
+export type SubscriptionStatus = 'Active' | 'Paused' // backend uses title-case
 
-// Shape of a single subscription as returned by the backend.
-// All computed fields (monthly_cost, days_remaining, is_renewing_soon)
-// are calculated server-side — the frontend never derives them.
+// Shape returned by GET /subscriptions (array) and POST + PATCH (single item).
+// Computed fields (monthlyRate, daysUntilRenewal, renewingSoon) are always
+// present — the backend runs enrichSubscription() before responding.
 export interface Subscription {
   id: number
-  name: string
-  cost: number                   // original entered cost
-  billing_cycle: BillingCycle
-  monthly_cost: number           // normalised by backend (yearly / 12)
-  next_renewal_date: string      // 'YYYY-MM-DD'
-  days_remaining: number         // backend calculates: renewal_date - today
-  is_renewing_soon: boolean      // backend flags: days_remaining <= 7 && active
+  serviceName: string
+  cost: number
+  billingCycle: BillingCycle
+  nextRenewalDate: string       // 'YYYY-MM-DD'
   status: SubscriptionStatus
+  createdAt: string
+  updatedAt: string
+  // Enriched by backend — never computed on the frontend
+  monthlyRate: number           // yearly cost / 12, else original cost
+  daysUntilRenewal: number      // Math.ceil((renewalDate - today) / 86400000)
+  renewingSoon: boolean         // daysUntilRenewal <= 7 && status === 'Active'
 }
 
-// Dashboard metrics — computed server-side from active subscriptions only.
+// Shape returned by GET /subscriptions/metrics
 export interface Metrics {
-  monthly_burn_rate: number         // sum of active monthly_cost values
-  upcoming_renewals_count: number   // count of active is_renewing_soon === true
+  totalMonthlyBurn: number          // sum of active monthlyRate values
+  upcomingRenewalsCount: number     // count of active renewingSoon === true
 }
 
-// Envelope returned by every API endpoint (GET, POST, PATCH).
+// Envelope the API client assembles for App.tsx consumption.
+// Both the list endpoint and the metrics endpoint are called together
+// and merged into this shape so App.tsx always gets a consistent update.
 export interface ApiResponse {
   subscriptions: Subscription[]
   metrics: Metrics
 }
 
-// Payload sent to POST /api/subscriptions — raw form data, no normalisation.
+// Body sent to POST /subscriptions — raw form data, backend does the rest.
 export interface SubscriptionPayload {
-  name: string
+  serviceName: string
   cost: number
-  billing_cycle: BillingCycle
-  next_renewal_date: string
+  billingCycle: BillingCycle
+  nextRenewalDate: string
 }
