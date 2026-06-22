@@ -21,6 +21,8 @@ backend/prisma/*.db-shm
 .env.*
 !.env.example
 !.env.*.example
+!.env.sample
+!.env.*.sample
 
 # ── Logs ──────────────────────────────────────────────────────────────────────
 logs/
